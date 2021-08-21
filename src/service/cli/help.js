@@ -1,5 +1,7 @@
 'use strict'
 
+const chalk = require(`chalk`);
+
 module.exports = {
     name: `--help`,
     run() {
@@ -11,6 +13,6 @@ module.exports = {
                     '--help:               печатает этот текст\n'+
                     '--generate <count>    формирует файл mocks.json\n';
 
-      console.info(info);
+      console.info(chalk.grey(info));
     }
 };
