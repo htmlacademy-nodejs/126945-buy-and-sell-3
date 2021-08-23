@@ -1,8 +1,9 @@
-'use strict'
+`use strict`;
 
-const fs = require(`fs`);
-const { getRandomInt, shuffle, } = require(`../../utils`);
-const { ExitCode } = require('../../constants');
+const chalk = require(`chalk`);
+const fs = require(`fs`).promises;
+const {getRandomInt, shuffle} = require(`../../utils`);
+const {ExitCode} = require(`../../constants`);
 
 const DEFAULT_COUNT = 1;
 const FILE_NAME = `mocks.json`;
@@ -53,42 +54,42 @@ const PictureRestrict = {
 };
 
 const getPictureFileName = (number) => {
-    const id = (number < 10) ? '0' + number : String(number);
-    return `item${id}.jpg`;
-}
+  const id = (number < 10) ? `0` + number : String(number);
+  return `item${id}.jpg`;
+};
 
 const generateOffers = (count) => (
-    Array(count).fill({}).map(() => ({
-        type: OfferType[Object.keys(OfferType)[Math.floor(Math.random() * Object.keys(OfferType).length)]],
-        title: TITLES[getRandomInt(0, TITLES.length - 1)],
-        description: shuffle(SENTENCES).slice(1, 5).join(` `),
-        sum: getRandomInt(SumRestrict.MIN, SumRestrict.MAX),
-        picture: getPictureFileName(getRandomInt(PictureRestrict.MIN, PictureRestrict.MAX)),
-        category: [CATEGORIES[getRandomInt(0, CATEGORIES.length - 1)]],
-    }))
+  Array(count).fill({}).map(() => ({
+    type: OfferType[Object.keys(OfferType)[Math.floor(Math.random() * Object.keys(OfferType).length)]],
+    title: TITLES[getRandomInt(0, TITLES.length - 1)],
+    description: shuffle(SENTENCES).slice(1, 5).join(` `),
+    sum: getRandomInt(SumRestrict.MIN, SumRestrict.MAX),
+    picture: getPictureFileName(getRandomInt(PictureRestrict.MIN, PictureRestrict.MAX)),
+    category: [CATEGORIES[getRandomInt(0, CATEGORIES.length - 1)]],
+  }))
 );
 
-
 module.exports = {
-    name: `--generate`,
-    run(count) {
-        const countOffer = Number.parseInt(count, 10) || DEFAULT_COUNT;
+  name: `--generate`,
+  async run(count) {
+    const countOffer = Number.parseInt(count, 10) || DEFAULT_COUNT;
 
-        if(count > 1000) {
-            console.log('Не больше 1000 объявлений');
-            process.exit(ExitCode.failure);
-        }
-
-        const content = JSON.stringify(generateOffers(countOffer));   
-        
-        fs.writeFile(FILE_NAME, content, (err) => {
-            if (err) {
-              console.error(`Can't write data to file...`);
-              process.exit(ExitCode.failure);
-            }
-          
-           console.info(`Operation success. File created.`);
-           process.exit(ExitCode.success);
-        });
+    if (count > 1000) {
+      console.error(chalk.red(`Не больше 1000 объявлений`));
+      process.exit(ExitCode.failure);
     }
+
+    const content = JSON.stringify(generateOffers(countOffer));
+
+    try {
+      await fs.writeFile(FILE_NAME, content);
+      console.info(chalk.green(`Operation success. File created.`));
+      process.exit(ExitCode.success);
+
+    } catch (e) {
+      console.error(chalk.red(`Can't write data to file...`));
+      console.error(chalk.red(e));
+      process.exit(ExitCode.failure);
+    }
+  }
 };
