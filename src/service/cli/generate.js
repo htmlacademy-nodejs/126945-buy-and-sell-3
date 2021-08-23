@@ -5,38 +5,23 @@ const fs = require(`fs`).promises;
 const {getRandomInt, shuffle} = require(`../../utils`);
 const {ExitCode} = require(`../../constants`);
 
+const FILE_SENTENCES_PATH = `./data/sentences.txt`;
+const FILE_TITLES_PATH = `./data/titles.txt`;
+const FILE_CATEGORIES_PATH = `./data/categories.txt`;
+
 const DEFAULT_COUNT = 1;
 const FILE_NAME = `mocks.json`;
 
-const TITLES = [
-  `Продам книги Стивена Кинга`,
-  `Продам новую приставку Sony Playstation 5`,
-  `Продам отличную подборку фильмов на VHS`,
-  `Куплю антиквариат`,
-  `Куплю породистого кота`,
-];
-
-const SENTENCES = [
-  `Товар в отличном состоянии.`,
-  `Пользовались бережно и только по большим праздникам.`,
-  `Продаю с болью в сердце...`,
-  `Бонусом отдам все аксессуары.`,
-  `Даю недельную гарантию.`,
-  `Если товар не понравится — верну всё до последней копейки.`,
-  `Это настоящая находка для коллекционера!`,
-  `Если найдёте дешевле — сброшу цену.`,
-  `Таких предложений больше нет!`,
-  `При покупке с меня бесплатная доставка в черте города.`,
-];
-
-const CATEGORIES = [
-  `Книги`,
-  `Разное`,
-  `Посуда`,
-  `Игры`,
-  `Животные`,
-  `Журналы`,
-];
+const readDataFromFile = async (pathToFile) => {
+  try {
+    const data = await fs.readFile(pathToFile, `utf8`);
+    return data.trim().split(`\n`);
+  } catch (e) {
+    console.error(chalk.red(`Can't read the file`));
+    console.error(chalk.red(e));
+    process.exit(ExitCode.failure);
+  }
+};
 
 const OfferType = {
   OFFER: `offer`,
@@ -58,14 +43,14 @@ const getPictureFileName = (number) => {
   return `item${id}.jpg`;
 };
 
-const generateOffers = (count) => (
+const generateOffers = (count, titles, sentences, categories) => (
   Array(count).fill({}).map(() => ({
     type: OfferType[Object.keys(OfferType)[Math.floor(Math.random() * Object.keys(OfferType).length)]],
-    title: TITLES[getRandomInt(0, TITLES.length - 1)],
-    description: shuffle(SENTENCES).slice(1, 5).join(` `),
+    title: titles[getRandomInt(0, titles.length - 1)],
+    description: shuffle(sentences).slice(1, 5).join(` `),
     sum: getRandomInt(SumRestrict.MIN, SumRestrict.MAX),
     picture: getPictureFileName(getRandomInt(PictureRestrict.MIN, PictureRestrict.MAX)),
-    category: [CATEGORIES[getRandomInt(0, CATEGORIES.length - 1)]],
+    category: [categories[getRandomInt(0, categories.length - 1)]],
   }))
 );
 
@@ -79,7 +64,11 @@ module.exports = {
       process.exit(ExitCode.failure);
     }
 
-    const content = JSON.stringify(generateOffers(countOffer));
+    const titles = await readDataFromFile(FILE_SENTENCES_PATH);
+    const sentences = await readDataFromFile(FILE_TITLES_PATH);
+    const categories = await readDataFromFile(FILE_CATEGORIES_PATH);
+
+    const content = JSON.stringify(generateOffers(countOffer, titles, sentences, categories));
 
     try {
       await fs.writeFile(FILE_NAME, content);
