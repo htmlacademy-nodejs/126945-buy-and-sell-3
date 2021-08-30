@@ -17,12 +17,13 @@ const readDataFromFile = async (pathToFile) => {
   try {
     const data = await fs.readFile(pathToFile, `utf8`);
     return data.trim().split(`\n`)
-    .map(el => el.trim())
-    .filter(el => el.length > 0);
+    .map((el) => el.trim())
+    .filter((el) => el.length > 0);
   } catch (e) {
     console.error(chalk.red(`Can't read the file`));
     console.error(chalk.red(e));
     process.exit(ExitCode.failure);
+    return [];
   }
 };
 
